@@ -1,0 +1,17 @@
+{
+  "name": "Pi_Tessel",
+  "version": "0.0.0",
+  "description": "Rasberry Pi Emulator for Tessel",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "author": "Nathan Lintz",
+  "license": "BSD",
+  "dependencies": {
+    "pi-spi": "~0.8.7",
+    "i2c": "~0.1.4",
+    "serialport": "~1.4.2"
+  }
+}
