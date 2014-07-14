@@ -12,6 +12,7 @@
   "dependencies": {
     "pi-spi": "~0.8.7",
     "i2c": "~0.1.4",
-    "serialport": "~1.4.2"
+    "serialport": "~1.4.2",
+    "rasp2c": "0.0.3"
   }
 }
