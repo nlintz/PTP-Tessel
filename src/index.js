@@ -1,16 +1,17 @@
-var SPI = require('pi-spi'),
-    spi = SPI.initialize('/dev/spidev0.0'),
+var SPI_Lib = require('pi-spi'),
+    spi = SPI_Lib.initialize('/dev/spidev0.0'),
     i2c = require('i2c'),
-    wire = new i2c(0x18, {device:'/dev/i2c-1'}),
+    rasp2c = require('rasp2c'),
+    SerialPort = require("serialport").SerialPort,
+    gpio = require("pi-gpio"),
     EventEmitter = require('events').EventEmitter,
     util = require('util')
-
 
 function Pi_Tessel () {
 
 }
 
-Pi_Tessel.prototype.SPI = function (params) {
+function SPI (params) {
   params = params || {};
   if (typeof params.dataMode == 'number') {
     params.cpol = params.dataMode & 0x1;
@@ -25,11 +26,11 @@ Pi_Tessel.prototype.SPI = function (params) {
   this.role = params.role == 'slave' ? 'slave': 'master';
   //this.bitOrder = propertySetWithDefault(params.bitOrder, SPIBitOrder, SPIBitOrder.MSB);
   this.chipSelect = params.chipSelect || null;
-}
+};
 
 util.inherits(SPI, EventEmitter);
 
-Pi_Tessel.prototype.SPI.transfer = function (txbuf, callback) {
+SPI.prototype.transfer = function (txbuf, callback) {
   spi.transfer(txbuf, txbuf.length, function (e, d) {
     if (callback) {
       callback(e, d);
@@ -37,23 +38,280 @@ Pi_Tessel.prototype.SPI.transfer = function (txbuf, callback) {
   });
 }
 
-Pi_Tessel.prototype.SPI.send = function (txbuf, callback) {
+SPI.prototype.send = function (txbuf, callback) {
  this.transfer(txbuf, callback); 
 }
 
-Pi_Tessel.prototype.SPI.receive = function (buf_len, callback) {
+SPI.prototype.receive = function (buf_len, callback) {
   var txbuf = new Buffer(buf_len);
   txbuf.fill(0);
   this.transfer(txbuf, callback);
 }
 
-Pi_Tessel.UART = function (params, port) {
+function UART (params) {
+  if (!params) params = {};
+  this.params = params;
+}
+
+util.inherits(UART, EventEmitter);
+
+UART.prototype._openUART = function (params) {
+  return new SerialPort("/dev/ttyAMA0", params);
+}
+
+UART.prototype.setBaudRate = function (rate) {
+  this.params.baudrate = rate;
+}
+
+UART.prototype.setDataBits = function (bits) {
+  this.params.databits = bits;
+}
+
+UART.prototype.setStopBits = function (bits) {
+  this.params.stopbits = bits;
+}
+
+UART.prototype.setParity = function (parity) {
+  this.params.parity = parity;
+}
+
+UART.prototype.write = function (buf) { 
+  var uart = this._openUART(this.params);
+  uart.on("open", function () {
+    uart.write(buf, function (err) {
+      if (err) {
+        console.log(err);
+      };
+      uart.close();
+    });
+  })
+}
+
+function I2C (addr) {
+  this.addr = addr; 
+  this.wire = new i2c(this.addr, {device:'/dev/i2c-1'});
+};
+
+util.inherits(I2C, EventEmitter);
+
+I2C.prototype.transfer = function (txbuf, rxbuf_len, callback) {
+  if (txbuf.length > 1) {
+    throw new Error("I2C Transfer txbuf cannot be larger than 1 byte");  
+  }
+  this.wire.readBytes(txbuf[0], rxbuf_len, function (err, res) {
+    if (err) {
+      console.log(err);  
+    } else {
+      if (callback) {
+        callback(err, res);
+      }
+    }
+  })
+}
+
+I2C.prototype.receive = function (rxbuf_len, callback) {
+ //this.wire.readBytes(this.addr, rxbuf_len, function (err, res) {
+ this.wire.readByte(function (err, res) {
+   if (callback) {
+    callback(err, res);
+   }
+ })
+};
+
+I2C.prototype.send = function (txbuf, callback) {
+  if (txbuf.length > 1) {
+    var car = txbuf.slice(0, 1)[0];
+    var cdr = Array.prototype.slice.call(txbuf.slice(1, txbuf.length), 0);
+    this.wire.writeBytes(car, cdr, function (err) {
+      if (callback) {
+        callback(err);
+      }
+    });
+  } else {
+    this.wire.writeByte(txbuf[0], function (err){
+      callback(err);
+    })
+  }
+};
+
+// Utils
+function _triggerTypeForMode(mode) {
+  switch(mode) {
+    case "high":
+    case "low" :
+      return "level";
+    case "rise":
+    case "fall":
+    case "change":
+      return "edge";
+    default:
+      return;
+  }
+}
+
+function _errorRoutine(pin, error) {
+  if (EventEmitter.listenerCount(pin, 'error')) {
+    pin.emit('error', error);
+  } else {
+    throw error;
+  }
+}
+
+
+function Pin (pin) {
+  this.pin = pin;
+  this.interrupts = {};
+  this.isPWM = false;
+}
+
+util.inherits(Pin, EventEmitter);
+
+Pin.prototype.type = 'digital';
+
+Pin.prototype.resolution = 1;
+
+Pin.prototype.input = function () {
+  gpio.close(this.pin);
+  gpio.open(this.pin, 'input');
+  return this;
+}
+
+Pin.prototype.output = function (value) {
+  value = value || 0;
+  gpio.close(this.pin);
+  gpio.open(this.pin, 'output', function (err) {
+    if (err) {
+      console.log(err);
+    } else {
+      gpio.write(this.pin, value);
+    }
+  }.bind(this));
+  return this;
+}
+
+Pin.prototype.rawDirection = function (isOutput) {
+  if (isOutput) {
+    this.output();
+  } else {
+    this.input();
+  }
+  return this;
+}
+
+Pin.prototype.rawWrite = function (value) {
+  gpio.write(this.pin, value);
+  return this;
+}
+
+Pin.prototype.pwmDutyCycle = function (dutyCycleFloat) {
 
 }
 
-Pi_Tessel.I2C = function (addr, mode, port) {
+Pin.prototype.write = function (value) {
+  this.rawWrite(value);
+  this.rawDirection(true);
 
+  return null;
 }
 
+Pin.prototype.rawRead = function () {
+  return gpio.read(this.pin);
+}
+
+Pin.prototype.read = function () {
+  this.rawRead();
+  this.rawDirection(false);
+
+  return null;
+}
+
+Pin.prototype.pull = function (mode) {
+  gpio.close(this.pin);
+  this.mode = mode;
+  gpio.open(this.pin, mode);
+  
+}
+
+Pin.prototype.mode = function () {
+  return this.mode ? this.mode : "none";
+}
+
+Pin.prototype.on = function (mode, callback) {
+  var type = _triggerTypeForMode(mode);
+
+  if (type == "level" && !this.__onceRegistered) {
+    _errorRoutine(this, new Error("You cannot use 'on' with level interrupts. You can only use 'once'.")); 
+  } else {
+    if (type && !this.__onceRegistered) {
+      //_registerPinInterrupt(this, type, mode);  
+    }
+    
+    this.__onceRegistered = false;
+    Pin.super_.prototype.on.call(this, mode, callback);
+  }
+}
+
+Pin.prototype.once = function (mode, callback) {
+  var type = _triggerTypeForMode(mode);
+
+  if (type) {
+    //_registerPinInterrupt(this, type, mode);
+    this.__onceRegistered = true;
+  }
+
+  Pin.super_.prototype.once.call(this, mode, callback);
+  
+}
+
+Pin.prototype.removeListener = function (type, listener) {
+  
+}
+
+Pin.prototype.removeAllListeners = function (type) {
+  
+}
+
+function _getPins (pin_numbers) {
+  var pins = [];
+  for (var i = 0; i<pin_numbers.length; i++) {
+    var pin = new Pin(pin_numbers[i]);
+    pins.unshift(pin);
+  }
+  return pins;
+};
+
+function _digitalPins () {
+  return _getPins([7, 11, 13, 15, 16, 18, 22]);
+}
+
+Pi_Tessel.prototype.digital = _digitalPins();
+
+function _analogPins () {
+  return [];
+};
+
+Pi_Tessel.prototype.analog = _analogPins();
+
+function _pwmPins () {
+  return _getPins([17]);
+};
+
+Pi_Tessel.prototype.pwm = _pwmPins();
+
+Pi_Tessel.prototype.pin = function () {
+  return [7, 11, 13, 15, 16, 17, 18, 22];
+}
+
+Pi_Tessel.prototype.SPI = function (params) {
+  return new SPI(params);
+};
+
+Pi_Tessel.prototype.I2C = function (addr) {
+  return new I2C(addr);  
+};
+
+Pi_Tessel.prototype.UART = function (params) {
+ return new UART(params);
+};
 
 module.exports = new Pi_Tessel();
