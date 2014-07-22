@@ -7,7 +7,7 @@ var SPI_Lib = require('pi-spi'),
     EventEmitter = require('events').EventEmitter,
     util = require('util')
 
-function Tessel_S () {
+function Pi_Tessel () {
 
 }
 
@@ -95,6 +95,7 @@ function I2C (addr) {
 util.inherits(I2C, EventEmitter);
 
 I2C.prototype.transfer = function (txbuf, rxbuf_len, callback) {
+  /**
   if (txbuf.length > 1) {
     throw new Error("I2C Transfer txbuf cannot be larger than 1 byte");  
   }
@@ -108,11 +109,20 @@ I2C.prototype.transfer = function (txbuf, rxbuf_len, callback) {
       }
     }
   })
+  **/
+  this.send(txbuf, function (err) {
+    if (err) {
+      console.log(err);
+    }
+  }.bind(this));
+  this.receive(rxbuf_len, function (err, response){
+      
+  }))
 }
 
 I2C.prototype.receive = function (rxbuf_len, callback) {
- // this.wire.readBytes(this.addr, rxbuf_len, function (err, res) {
- this.wire.readByte(function (err, res) {
+ this.wire.readBytes(this.addr, rxbuf_len, function (err, res) {
+ //this.wire.readByte(function (err, res) {
    if (callback) {
     callback(err, res);
    }
@@ -285,34 +295,34 @@ function _digitalPins () {
   return _getPins([7, 11, 13, 15, 16, 18, 22]);
 }
 
-Tessel_S.prototype.digital = _digitalPins();
+Pi_Tessel.prototype.digital = _digitalPins();
 
 function _analogPins () {
   return [];
 };
 
-Tessel_S.prototype.analog = _analogPins();
+Pi_Tessel.prototype.analog = _analogPins();
 
 function _pwmPins () {
   return _getPins([17]);
 };
 
-Tessel_S.prototype.pwm = _pwmPins();
+Pi_Tessel.prototype.pwm = _pwmPins();
 
-Tessel_S.prototype.pin = function () {
+Pi_Tessel.prototype.pin = function () {
   return [7, 11, 13, 15, 16, 17, 18, 22];
 }
 
-Tessel_S.prototype.SPI = function (params) {
+Pi_Tessel.prototype.SPI = function (params) {
   return new SPI(params);
 };
 
-Tessel_S.prototype.I2C = function (addr) {
+Pi_Tessel.prototype.I2C = function (addr) {
   return new I2C(addr);  
 };
 
-Tessel_S.prototype.UART = function (params) {
+Pi_Tessel.prototype.UART = function (params) {
  return new UART(params);
 };
 
-module.exports = new Tessel_S();
+module.exports = new Pi_Tessel();

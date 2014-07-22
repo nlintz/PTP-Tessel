@@ -1,7 +1,7 @@
 {
-  "name": "Pi_Tessel",
+  "name": "tessel_s",
   "version": "0.0.0",
-  "description": "Rasberry Pi Emulator for Tessel",
+  "description":" Emulator for Tessel",
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
