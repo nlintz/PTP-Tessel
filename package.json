@@ -1,7 +1,7 @@
 {
   "name": "tessel_s",
   "version": "0.0.0",
-  "description":" Emulator for Tessel",
+  "description": " Emulator for Tessel",
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,6 +11,7 @@
   "license": "BSD",
   "dependencies": {
     "i2c": "~0.1.4",
+    "node-cubieboard-gpio": "0.0.5",
     "pi-gpio": "0.0.6",
     "pi-spi": "~0.8.7",
     "rasp2c": "0.0.3",
