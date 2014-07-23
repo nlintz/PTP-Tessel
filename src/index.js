@@ -1,16 +1,94 @@
-var SPI_Lib = require('pi-spi'),
-    spi = SPI_Lib.initialize('/dev/spidev0.0'),
-    i2c = require('i2c'),
-    rasp2c = require('rasp2c'),
-    SerialPort = require("serialport").SerialPort,
-    gpio = require("pi-gpio"),
-    EventEmitter = require('events').EventEmitter,
-    util = require('util')
+var EventEmitter = require('events').EventEmitter,
+    util = require('util'),
+    uartService = require('./drivers/uart.js'),
+    i2cService = require('./drivers/i2c.js'),
+    spiService = require('./drivers/spi.js'),
+    spi = spiService('/dev/spidev0.0'),
+    Pin = require('./drivers/gpio.js')
 
-function Tessel_S () {
 
+
+function Port (id, digital, analog, pwm, i2c, uart)
+{
+  this.id = String(id);
+  var self = this;
+  this.digital = digital.slice();
+  this.analog = [];
+  this.pwm = pwm.slice();
+  this.pin = {};
+  var pinMap = {digital : {'G1': 0, 'G2': 1, 'G3': 2}};
+
+  Object.keys(pinMap).forEach(function(type) {
+    Object.keys(pinMap[type]).forEach(function(pinKey) {
+      self.pin[pinKey] = self[type][pinMap[type][pinKey]];
+        Object.defineProperty(self.pin, pinKey.toLowerCase(), {
+        get: function () { return self.pin[pinKey]; }
+      });
+    });
+  });
+
+  this.I2C = function (addr, mode, port) {
+    return i2c.get(addr, mode, port);
+  };
+
+  this.UART = function (format, port) {
+    return uart.get(format, port);
+  };
+};
+
+Port.prototype.SPI = function (format, port) {
+  return spi.get(format);
+};
+
+Port.prototype.digitalWrite = function (n, val) {
+  this.digital[n].write(val);
 }
 
+/** UNIMPLEMENTED METHODS
+  Port.prototype.pinOutput
+  Port.prototype.pwmFrequency
+**/
+
+function Tessel_S () {
+  var self = this;
+
+  if (Tessel_S.instance) {
+    return Tessel_S.instance;
+  } else {
+    Tessel_S.instance = this;
+  }
+
+  this.ports =  {
+    A: new Port('A', [new Pin("PD2"), new Pin("PD1"), new Pin("PD4")], [], [], i2cService("/dev/i2c-1"), uartService("ttyS1")),
+
+    B: new Port('B', [new Pin("PD3"), new Pin("PD6"), new Pin("PD5")], [], [], i2cService("i2c-1"), uartService("ttyS2"))
+
+  };
+
+
+  this.port = function (label) {
+    return board.ports[label.toUpperCase()];
+  };
+}
+
+var board = module.exports = new Tessel_S();
+
+for (var key in board.ports) {
+    board.port[key] = board.ports[key];
+}
+
+
+util.inherits(Tessel_S, EventEmitter);
+/** UNIMPLEMENTED METHODS
+this.led
+this.pin
+this.interrupts
+this.interruptsAvailable
+this.button
+this.sleep
+
+**/
+/**
 function SPI (params) {
   params = params || {};
   if (typeof params.dataMode == 'number') {
@@ -314,5 +392,4 @@ Tessel_S.prototype.I2C = function (addr) {
 Tessel_S.prototype.UART = function (params) {
  return new UART(params);
 };
-
-module.exports = new Tessel_S();
+**/

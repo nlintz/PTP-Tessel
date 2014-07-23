@@ -1,12 +1,6 @@
-Pi_Tessel = require('../src/index.js');
+i2cService = require('../src/drivers/i2c.js')('/dev/i2c-1'); 
 
-var i2c = Pi_Tessel.I2C(0x40);
-
-i2c.send(new Buffer([0x80, 0x01]), function (err){
-  if (err)
-    console.log(err);
+var i2c = i2cService.get(0x40); 
+i2c.transfer(new Buffer([0x11]), 1, function (err, res) {
+  console.log(err, res);  
 });
-
-i2c.receive(function(err, response){})
-
-i2c.transfer(new Buffer([0x11]), 1, function(err, response){});

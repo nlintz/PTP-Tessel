@@ -1,4 +1,5 @@
-Pi_Tessel = require('../src/index.js');
+var uartService = require('../src/drivers/uart.js')('/dev/ttyS1'); 
 
-var UART = Pi_Tessel.UART();
-UART.write(new Buffer([0, 2, 4, 6, 8]))
+var uart = uartService.get();
+
+uart.write(new Buffer([0, 1, 2, 3, 4]));
