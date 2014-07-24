@@ -1,9 +1,20 @@
 var Pin = require('../src/drivers/gpio.js');
 
-var pin1 = new Pin("PD1");
+var pins = [];
+for (var i=1; i<7; i++) {
+  pins.push({name: "PD" + i, pin:new Pin("PD"+i)});
+}
 
-pin1.output().write(1);
-console.log(pin1.input().read());
+for (var i in pins) {
+  var pin = pins[i];
+  pin.pin.output().write(1);
+  var high = pin.pin.input().read();
 
-pin1.output().write(0);
-console.log(pin1.input().read());
+  pin.pin.output().write(0);
+  var low = pin.pin.input().read();
+
+  if (high != 1 || low != 0) {
+    console.log("err", pin.name);
+  }
+}
+

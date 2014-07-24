@@ -59,9 +59,9 @@ function Tessel_S () {
   }
 
   this.ports =  {
-    A: new Port('A', [new Pin("PD2"), new Pin("PD1"), new Pin("PD4")], [], [], i2cService("/dev/i2c-1"), uartService("ttyS1")),
+    A: new Port('A', [new Pin("PD1"), new Pin("PD3"), new Pin("PD5")], [], [], i2cService("/dev/i2c-1"), uartService("ttyS1")),
 
-    B: new Port('B', [new Pin("PD3"), new Pin("PD6"), new Pin("PD5")], [], [], i2cService("i2c-1"), uartService("ttyS2"))
+    B: new Port('B', [new Pin("PD2"), new Pin("PD4"), new Pin("PD6")], [], [], i2cService("i2c-1"), uartService("ttyS2"))
 
   };
 

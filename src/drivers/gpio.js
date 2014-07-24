@@ -9,7 +9,6 @@ function Pin (pin) {
   this.interrupts = {};
   this.isPWM = false;
 
-
 };
 
 util.inherits(Pin, EventEmitter);
@@ -58,6 +57,63 @@ Pin.prototype.read = function () {
 
 Pin.prototype.rawRead = function () {
   return PinDriver.input(this.pin);
+}
+
+/** Interrupts **/
+
+function _triggerTypeForMode(mode) {
+
+  switch(mode) {
+    case "high":
+    case "low" :
+      return "level";
+    case "rise":
+    case "fall":
+    case "change":
+      return "edge";
+    default:
+      return;
+  }
+}
+
+Pin.prototype.once = function (mode, callback) {
+  var type = _triggerTypeForMode(mode);
+
+  if (type) {
+
+    _registerPinInterrupt(this, type, mode);
+
+    this.__onceRegistered = true;
+  }
+
+  Pin.super_.prototype.once.call(this, mode, callback);
+};
+
+
+
+Pin.prototype.on = function(mode, callback) {
+
+  var type = _triggerTypeForMode(mode);
+
+  if (type === "level" && !this.__onceRegistered) {
+    throw  new Error("You cannot use 'on' with level interrupts. You can only use 'once'.");
+  }
+  
+  else {
+
+    if (type && !this.__onceRegistered) {
+
+      _registerPinInterrupt(this, type, mode);
+    }
+
+    this.__onceRegistered = false;
+
+    Pin.super_.prototype.on.call(this, mode, callback);
+  }
+};
+
+function _registerPinInterrupt (pin, type, mode) {
+  
 }
 
 module.exports = Pin;
