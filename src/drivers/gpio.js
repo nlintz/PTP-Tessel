@@ -1,14 +1,13 @@
 var util = require('util'),
   EventEmitter = require('events').EventEmitter  
 
-var PinDriver = require('node-cubieboard-gpio');
+var PinDriver = require('tm-onoff').Gpio;
 
 function Pin (pin) {
-  this.pin = PinDriver[pin];
-  PinDriver.init();
+  this.pin = pin;
+  this.gpio= new PinDriver(pin);
   this.interrupts = {};
   this.isPWM = false;
-
 };
 
 util.inherits(Pin, EventEmitter);
@@ -30,9 +29,9 @@ Pin.prototype.output = function (value) {
 
 Pin.prototype.rawDirection = function (isOutput) {
   if (isOutput) {
-    PinDriver.setcfg(this.pin, PinDriver.OUT); 
+    this.gpio.setDirection('out');
   } else {
-    PinDriver.setcfg(this.pin, PinDriver.IN);
+    this.gpio.setDirection('in');
   }
 }
 
@@ -43,9 +42,9 @@ Pin.prototype.write = function (value) {
 
 Pin.prototype.rawWrite = function (value) {
   if (value) {
-    PinDriver.output(this.pin, PinDriver.HIGH); 
+    this.gpio.writeSync(1); 
   } else {
-    PinDriver.output(this.pin, PinDriver.LOW);
+    this.gpio.writeSync(0);
   }
 }
 
@@ -56,7 +55,7 @@ Pin.prototype.read = function () {
 }
 
 Pin.prototype.rawRead = function () {
-  return PinDriver.input(this.pin);
+  return this.gpio.readSync();
 }
 
 /** Interrupts **/

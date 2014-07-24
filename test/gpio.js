@@ -1,8 +1,8 @@
 var Pin = require('../src/drivers/gpio.js');
 
 var pins = [];
-for (var i=1; i<7; i++) {
-  pins.push({name: "PD" + i, pin:new Pin("PD"+i)});
+for (var i=1; i<2; i++) {
+  pins.push({name: 10, pin:new Pin(10)});
 }
 
 for (var i in pins) {

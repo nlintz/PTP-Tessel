@@ -11,10 +11,8 @@
   "license": "BSD",
   "dependencies": {
     "i2c": "~0.1.4",
-    "node-cubieboard-gpio": "0.0.5",
-    "pi-gpio": "0.0.6",
     "pi-spi": "~0.8.7",
-    "rasp2c": "0.0.3",
-    "serialport": "~1.4.2"
+    "serialport": "~1.4.2",
+    "tm-onoff": "^0.3.3"
   }
 }
