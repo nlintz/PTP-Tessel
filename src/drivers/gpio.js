@@ -40,11 +40,26 @@ Pin.prototype.write = function (value) {
   return null;
 };
 
+Pin.prototype.high = function () {
+  this.output(true);
+  return this;
+}
+
+Pin.prototype.low = function () {
+  this.output(false);
+  return this;
+}
+
 Pin.prototype.rawWrite = function (value) {
-  if (value) {
-    this.gpio.writeSync(1); 
+  if (this.gpio.direction() == "in") {
+    this.output(value);  
+    this.input();
   } else {
-    this.gpio.writeSync(0);
+    if (value) {
+      this.gpio.writeSync(1); 
+    } else {
+      this.gpio.writeSync(0);
+    }
   }
 }
 
@@ -112,7 +127,7 @@ Pin.prototype.on = function(mode, callback) {
 };
 
 function _registerPinInterrupt (pin, type, mode) {
-  
+ console.log('registering interrupt'); 
 }
 
 module.exports = Pin;

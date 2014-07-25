@@ -2,6 +2,12 @@ var util = require('util'),
   EventEmitter = require('events').EventEmitter
 
 var SPIDriver = require('pi-spi');
+var MAX_SPI_SPEED = {freq:125 * Math.pow(10, 6), divisor:65536 };
+var MIN_SPI_SPEED = {freq:3.814 * Math.pow(10, 3), divisor:2};
+
+Number.prototype.map = function ( in_min , in_max , out_min , out_max ) {
+  return ( this - in_min ) * ( out_max - out_min ) / ( in_max - in_min ) + out_min;
+}
 
 function SpiService (device) {
   var device = device;
@@ -39,8 +45,9 @@ util.inherits(SPI, EventEmitter);
 
 SPI.prototype.transfer = function (txbuf, callback) {
   if (this.chipSelect) {
-    this.chipSelect.output.low();
+    this.chipSelect.output().low();
   }
+  console.log(this.chipSelect.read())
   this.spi.transfer(txbuf, txbuf.length, function (e, d) {
     if (this.chipSelect) {
       this.chipSelect.output().high()
