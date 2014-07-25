@@ -94,6 +94,8 @@ function Interrupt(mode) {
   this.mode = mode;
 };
 
+var i =0;
+
 Pin.prototype.once = function (mode, callback) {
   var type = _triggerTypeForMode(mode);
 
@@ -147,8 +149,14 @@ Pin.prototype.removeListener = function (event, listener) {
   return emitter;
 };
 
+function _setPinInterruptConditions (pin, edge) {
+  pin.gpio.setDirection('in');
+  pin.gpio.setEdge(edge);
+}
+
 function _registerPinInterrupt(pin, type, mode) {
 // TODO CHECK FOR ALREADY REGISTERED INTERRUPTS
+
   if (type == "level") {
     var reading = (pin.read() == 1) ? "high" : "low";
     
@@ -161,10 +169,10 @@ function _registerPinInterrupt(pin, type, mode) {
 
     switch (mode) {
       case "high":
-        pin.gpio = new PinDriver(pin.pin, 'in', 'rising');
+        _setPinInterruptConditions(pin, 'rising');
         break;
       case "low":
-        pin.gpio = new PinDriver(pin.pin, 'in', 'falling');
+        _setPinInterruptConditions(pin, 'falling');
         break;
       default:
         return;
@@ -173,13 +181,13 @@ function _registerPinInterrupt(pin, type, mode) {
   else if (type == "edge") {
     switch (mode) {
       case "rise":
-        pin.gpio = new PinDriver (pin.pin, 'in', 'rising');
+        _setPinInterruptConditions(pin, 'rising');
         break;
       case "fall":
-        pin.gpio = new PinDriver (pin.pin, 'in', 'falling');
+        _setPinInterruptConditions(pin, 'falling');
         break;
       case "change":
-        pin.gpio = new PinDriver(pin.pin, 'in', 'both');
+        _setPinInterruptConditions(pin, 'both');
         break;
       default:
         return;

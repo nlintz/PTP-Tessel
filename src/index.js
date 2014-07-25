@@ -52,7 +52,7 @@ Port.prototype.digitalWrite = function (n, val) {
 function Tessel_S () {
   var self = this;
 
-    this.led = [new Pin(4), new Pin(18), new Pin(16), new Pin(6)];
+  this.led = [new Pin(4), new Pin(18), new Pin(16), new Pin(6)];
 
   if (Tessel_S.instance) {
     return Tessel_S.instance;
