@@ -90,6 +90,10 @@ function _triggerTypeForMode(mode) {
   }
 }
 
+function Interrupt(mode) {
+  this.mode = mode;
+};
+
 Pin.prototype.once = function (mode, callback) {
   var type = _triggerTypeForMode(mode);
 
@@ -103,31 +107,93 @@ Pin.prototype.once = function (mode, callback) {
   Pin.super_.prototype.once.call(this, mode, callback);
 };
 
-
-
 Pin.prototype.on = function(mode, callback) {
+
+  if (this.gpio.direction() != "in") {
+    this.output();
+  }
 
   var type = _triggerTypeForMode(mode);
 
   if (type === "level" && !this.__onceRegistered) {
-    throw  new Error("You cannot use 'on' with level interrupts. You can only use 'once'.");
+    throw new Error("You cannot use 'on' with level interrupts. You can only use 'once'.");
   }
-  
+
+  // This is a valid event
   else {
 
+    // If it is an edge trigger (and we didn't already register a level in 'once')
     if (type && !this.__onceRegistered) {
 
+      // Register the pin with the firmware and our data structure
       _registerPinInterrupt(this, type, mode);
     }
 
+    // Clear the once register
     this.__onceRegistered = false;
 
+    // Add the event listener
     Pin.super_.prototype.on.call(this, mode, callback);
   }
 };
 
-function _registerPinInterrupt (pin, type, mode) {
- console.log('registering interrupt'); 
+Pin.prototype.removeListener = function (event, listener) {
+  // Call the regular event emitter method
+  var emitter = Pin.super_.prototype.removeListener.call(this, event, listener);
+
+  // If it's an interrupt event, remove as necessary
+  //_interruptRemovalCheck(event);
+
+  return emitter;
+};
+
+function _registerPinInterrupt(pin, type, mode) {
+// TODO CHECK FOR ALREADY REGISTERED INTERRUPTS
+  if (type == "level") {
+    var reading = (pin.read() == 1) ? "high" : "low";
+    
+    if (reading == mode) {
+      setImmediate(function () {
+        pin.emit(mode);
+      })
+      return;  
+    }
+
+    switch (mode) {
+      case "high":
+        pin.gpio = new PinDriver(pin.pin, 'in', 'rising');
+        break;
+      case "low":
+        pin.gpio = new PinDriver(pin.pin, 'in', 'falling');
+        break;
+      default:
+        return;
+    }
+  } 
+  else if (type == "edge") {
+    switch (mode) {
+      case "rise":
+        pin.gpio = new PinDriver (pin.pin, 'in', 'rising');
+        break;
+      case "fall":
+        pin.gpio = new PinDriver (pin.pin, 'in', 'falling');
+        break;
+      case "change":
+        pin.gpio = new PinDriver(pin.pin, 'in', 'both');
+        break;
+      default:
+        return;
+    }
+  }
+  var pin = pin; // Bind pin instance with closure
+  pin.gpio.watch(function (err, value) {
+    if (pin.__onceRegistered) {
+      pin.gpio.unwatch();
+    }
+    pin.emit(mode);
+  })
 }
+
+
 
 module.exports = Pin;

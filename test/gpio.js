@@ -1,5 +1,6 @@
 var Pin = require('../src/drivers/gpio.js');
 
+/**
 var pins = [];
 for (var i=1; i<2; i++) {
   pins.push({name: 10, pin:new Pin(10)});
@@ -17,4 +18,15 @@ for (var i in pins) {
     console.log("err", pin.name);
   }
 }
+**/
 
+var inputPin = new Pin(10);
+var outputPin = new Pin(28);
+inputPin.on('change', function () {
+  console.log('triggered properly');
+})
+
+outputPin.output().write(0)
+outputPin.output().write(1)
+outputPin.output().write(0)
+outputPin.output().write(1)
