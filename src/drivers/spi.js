@@ -30,7 +30,8 @@ function SPI (device, params) {
   this.cpha = params.cpha == 'second' || params.cpha == 1 ? 1 : 0;
 
   this.clockSpeed = params.clockSpeed || 100000;
-  this.spi.clockSpeed(this.clockSpeed);
+  //this.spi.clockSpeed(this.clockSpeed);
+  this.spi.clockSpeed(10000);
 
   this.frameMode = 'normal';
   this.role = params.role == 'slave' ? 'slave': 'master';
@@ -47,7 +48,6 @@ SPI.prototype.transfer = function (txbuf, callback) {
   if (this.chipSelect) {
     this.chipSelect.output().low();
   }
-  console.log(this.chipSelect.read())
   this.spi.transfer(txbuf, txbuf.length, function (e, d) {
     if (this.chipSelect) {
       this.chipSelect.output().high()

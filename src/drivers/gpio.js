@@ -61,6 +61,7 @@ Pin.prototype.rawWrite = function (value) {
       this.gpio.writeSync(0);
     }
   }
+  return this;
 }
 
 Pin.prototype.read = function () {
@@ -93,8 +94,6 @@ function _triggerTypeForMode(mode) {
 function Interrupt(mode) {
   this.mode = mode;
 };
-
-var i =0;
 
 Pin.prototype.once = function (mode, callback) {
   var type = _triggerTypeForMode(mode);
