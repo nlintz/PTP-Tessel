@@ -1,6 +1,8 @@
 var util = require('util'),
-  EventEmitter = require('events').EventEmitter
+  EventEmitter = require('events').EventEmitter,
+  Queue = require('sync-queue')
 
+var queue = new Queue();
 var SPIDriver = require('pi-spi');
 var MAX_SPI_SPEED = {freq:125 * Math.pow(10, 6), divisor:65536 };
 var MIN_SPI_SPEED = {freq:3.814 * Math.pow(10, 3), divisor:2};
@@ -21,17 +23,18 @@ function SPI (device, params) {
   this.spi = SPIDriver.initialize(device);
 
   params = params || {};
-  if (typeof params.dataMode == 'number') {
-    params.cpol = params.dataMode & 0x1;
-    params.cpha = params.dataMode & 0x2;
-    this.spi.dataMode(params.dataMode);
+  if (typeof params.mode == 'number') {
+    params.cpol = params.mode & 0x1;
+    params.cpha = params.mode & 0x2;
+    //this.spi.dataMode(params.cpol | params.cpha);
+    this.spi.dataMode(0x01)
   }
   this.cpol = params.cpol == 'high' || params.cpol == 1 ? 1 : 0;
   this.cpha = params.cpha == 'second' || params.cpha == 1 ? 1 : 0;
 
   this.clockSpeed = params.clockSpeed || 100000;
   //this.spi.clockSpeed(this.clockSpeed);
-  this.spi.clockSpeed(10000);
+  this.spi.clockSpeed(4000);
 
   this.frameMode = 'normal';
   this.role = params.role == 'slave' ? 'slave': 'master';
@@ -45,6 +48,7 @@ function SPI (device, params) {
 util.inherits(SPI, EventEmitter);
 
 SPI.prototype.transfer = function (txbuf, callback) {
+  queue.place(function(){
   if (this.chipSelect) {
     this.chipSelect.output().low();
   }
@@ -54,8 +58,10 @@ SPI.prototype.transfer = function (txbuf, callback) {
     }
     if (callback) {
       callback(e, d);
+      queue.next();
     }
   }.bind(this));
+  }.bind(this))
 };
 
 SPI.prototype.send = function (txbuf, callback) {
