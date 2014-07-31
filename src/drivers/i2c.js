@@ -46,9 +46,9 @@ I2C.prototype.receive = function (rxbuf_len, callback) {
 
 I2C.prototype.send = function (txbuf, callback) {
   if (txbuf.length > 1) {
-    var car = txbuf.slice(0, 1)[0];
-    var cdr = Array.prototype.slice.call(txbuf.slice(1, txbuf.length), 0);
-    this.wire.writeBytes(car, cdr, function (err) {
+    var cmd = txbuf.slice(0, 1)[0];
+    var data = Array.prototype.slice.call(txbuf.slice(1, txbuf.length), 0);
+    this.wire.writeBytes(cmd, data, function (err) {
       if (callback) {
         callback(err);
       }
