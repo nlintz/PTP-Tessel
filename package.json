@@ -10,6 +10,7 @@
   "author": "Nathan Lintz",
   "license": "BSD",
   "dependencies": {
+    "async": "^0.9.0",
     "i2c": "~0.1.4",
     "pi-spi": "~0.8.7",
     "serialport": "~1.4.2",

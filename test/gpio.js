@@ -20,7 +20,10 @@ for (var i in pins) {
 }
 **/
 
-var inputPin = new Pin(10);
+var inputPin = new Pin(11);
+inputPin.output().rawWrite('high')
+inputPin.output().rawWrite('low')
+/**
 var outputPin = new Pin(28);
 inputPin.on('change', function () {
   console.log('triggered properly');
@@ -30,3 +33,4 @@ outputPin.output().write(0)
 outputPin.output().write(1)
 outputPin.output().write(0)
 outputPin.output().write(1)
+**/

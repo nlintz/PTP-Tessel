@@ -1,6 +1,7 @@
 var util = require('util'),
   EventEmitter = require('events').EventEmitter,
-  Queue = require('sync-queue')
+  Queue = require('sync-queue'),
+  async = require('async')
 
 var queue = new Queue();
 var SPIDriver = require('pi-spi');
@@ -27,14 +28,14 @@ function SPI (device, params) {
     params.cpol = params.mode & 0x1;
     params.cpha = params.mode & 0x2;
     //this.spi.dataMode(params.cpol | params.cpha);
-    this.spi.dataMode(0x01)
+    this.spi.dataMode(0)
   }
   this.cpol = params.cpol == 'high' || params.cpol == 1 ? 1 : 0;
   this.cpha = params.cpha == 'second' || params.cpha == 1 ? 1 : 0;
 
   this.clockSpeed = params.clockSpeed || 100000;
   //this.spi.clockSpeed(this.clockSpeed);
-  this.spi.clockSpeed(4000);
+  this.spi.clockSpeed(8000);
 
   this.frameMode = 'normal';
   this.role = params.role == 'slave' ? 'slave': 'master';
@@ -47,20 +48,45 @@ function SPI (device, params) {
 
 util.inherits(SPI, EventEmitter);
 
+SPI.prototype._promiseTransfer = function (byteToTransfer) {
+  var deferred = Q.defer();
+  console.log('transfering', byteToTransfer)
+  this.spi.transfer(byteToTransfer, 1, function(err, rx) {
+    if (err) {
+      deferred.reject(new Error("Spi Transfer Failed"));
+    } else {
+      deferred.resolve(rx);
+    }
+  })
+  return deferred.promise;
+}
+
+SPI.prototype._transferByte = function(byteToTransfer) {
+  return function (callback) {
+    this.spi.transfer(byteToTransfer, 1, function(err, rx) {
+      callback(null, rx);
+    })
+  }.bind(this);
+}
+
 SPI.prototype.transfer = function (txbuf, callback) {
   queue.place(function(){
-  if (this.chipSelect) {
-    this.chipSelect.output().low();
-  }
-  this.spi.transfer(txbuf, txbuf.length, function (e, d) {
     if (this.chipSelect) {
-      this.chipSelect.output().high()
+      this.chipSelect.output().low();
     }
-    if (callback) {
-      callback(e, d);
+    var proms = [];
+    for (var i = 0; i<txbuf.length; i++) {
+      proms.push(this._transferByte(new Buffer([txbuf[i]])));
+    }
+    async.series(proms, function (err, rx) {
+      if (this.chipSelect) {
+        this.chipSelect.output().high();
+      }
+      if (callback) {
+        callback(err, Buffer.concat(rx));
+      }
       queue.next();
-    }
-  }.bind(this));
+    }.bind(this))
   }.bind(this))
 };
 

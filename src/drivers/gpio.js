@@ -21,6 +21,11 @@ Pin.prototype.input = function () {
   return this;
 };
 
+//TODO IMPLEMENT ME
+Pin.prototype.mode = function () {
+
+}
+
 Pin.prototype.output = function (value) {
   this.rawDirection(true);
   this.rawWrite(value);
@@ -51,16 +56,26 @@ Pin.prototype.low = function () {
 }
 
 Pin.prototype.rawWrite = function (value) {
-  if (this.gpio.direction() == "in") {
-    this.output(value);  
-    this.input();
-  } else {
-    if (value) {
-      this.gpio.writeSync(1); 
-    } else {
-      this.gpio.writeSync(0);
-    }
+  if (typeof value == 'string') {
+    value = (value == 'high') ? 1 : 0;
   }
+
+  var isInput = (this.gpio.direction() == "in");
+
+  if (isInput) {
+    this.rawDirection(true);
+  }
+     
+  if (value) {
+    this.gpio.writeSync(1); 
+  } else {
+    this.gpio.writeSync(0);
+  }
+
+  if (isInput) {
+    this.rawDirection(false);
+  }
+
   return this;
 }
 
@@ -97,7 +112,6 @@ function Interrupt(mode) {
 
 Pin.prototype.once = function (mode, callback) {
   var type = _triggerTypeForMode(mode);
-
   if (type) {
 
     _registerPinInterrupt(this, type, mode);
@@ -199,6 +213,7 @@ function _registerPinInterrupt(pin, type, mode) {
     }
     pin.emit(mode);
   })
+  pin.gpio.listeners[0]()
 }
 
 
