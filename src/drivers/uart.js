@@ -1,8 +1,9 @@
 var util = require('util'),
-  EventEmitter = require('events').EventEmitter
+  EventEmitter = require('events').EventEmitter,
+  Queue = require('sink_q')
  
 var UARTDriver = require('serialport').SerialPort;
-
+var queue = new Queue();
 
 function UARTService (device) {
   var device = device;
@@ -17,20 +18,29 @@ function UART (device, params, port) {
   this.device = device;
   this.uartPort = port;
   this.params = params;
-  this.baudrate = (params.baudrate ? params.baudrate : 9600);
+
+  this.serial = new UARTDriver(device);
   //this.dataBits = propertySetWithDefault(params.dataBits, UARTDataBits, UARTDataBits.Eight);
   //this.parity = propertySetWithDefault(params.parity, UARTParity, UARTParity.None);
   //this.stopBits = propertySetWithDefault(params.stopBits, UARTStopBits, UARTStopBits.One);
 
-  process.on('uart-receive', function (port, data) {
-    if (port === this.uartPort) {
-      this.emit('data', data);
-    }
+  this.serial.on("open", function () {
+    queue.ready();
+  }.bind(this))
+
+  this.serial.on("data", function (data) {
+    this.emit("data", data) 
   }.bind(this))
 }
 
 util.inherits(UART, EventEmitter);
  
+UART.prototype.on = function (mode, callback) {
+  queue.push(function(callback) {
+    UART.super_.prototype.on.call(this, mode, callback);
+  }.bind(this), callback)
+}
+
 UART.prototype.setBaudRate = function (rate) {
   this.params.baudrate = rate;
 };
@@ -48,16 +58,13 @@ UART.prototype.setParity = function (parity) {
 }
 
 UART.prototype.write = function (buf) {
-  var uart = this._openUART(this.params);
-  uart.on("open", function () {
-    uart.write(buf, function (err) {
-      if (err) {
-        console.log(err);
-      };
-      uart.close();
-    });
-  })
+  queue.push(function (callback) {
+    this.serial.write(buf, callback);
+  }.bind(this), function (err) {
+    if (err) {
+      console.log("Error:", err);
+    };
+  }.bind(this))
 };
 
-module.exports = UARTService;
-  
+module.exports = UARTService; 

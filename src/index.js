@@ -52,7 +52,7 @@ Port.prototype.digitalWrite = function (n, val) {
 function Tessel_S () {
   var self = this;
 
-  this.led = [new Pin(4), new Pin(18), new Pin(16), new Pin(6)];
+  //this.led = [new Pin(4), new Pin(18), new Pin(16), new Pin(6)];
 
   if (Tessel_S.instance) {
     return Tessel_S.instance;
@@ -61,9 +61,9 @@ function Tessel_S () {
   }
 
   this.ports =  {
-    A: new Port('A', [new Pin(30), new Pin(28), new Pin(42), new Pin(11)], [], [], i2cService("/dev/i2c-1"), uartService("ttyS1")),
+    A: new Port('A', [new Pin(30), new Pin(28), new Pin(42), new Pin(11)], [], [], i2cService("/dev/i2c-1"), uartService("/dev/ttyS1")),
 
-    B: new Port('B', [new Pin(31), new Pin(29), new Pin(43), new Pin(10)], [], [], i2cService("i2c-1"), uartService("ttyS2"))
+    B: new Port('B', [new Pin(31), new Pin(29), new Pin(43), new Pin(10)], [], [], i2cService("/dev/i2c-1"), uartService("/dev/ttyS2"))
 
   };
 
