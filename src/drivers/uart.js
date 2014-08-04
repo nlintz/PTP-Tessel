@@ -31,10 +31,6 @@ function UART (device, params, port) {
 
 util.inherits(UART, EventEmitter);
  
-UART.prototype._openUART = function (params) {
-  return new UARTDriver(this.device, params);
-};
-
 UART.prototype.setBaudRate = function (rate) {
   this.params.baudrate = rate;
 };
