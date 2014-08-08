@@ -49,15 +49,15 @@ Port.prototype.digitalWrite = function (n, val) {
   Port.prototype.pwmFrequency
 **/
 
-function Tessel_S () {
+function PTP_Tessel() {
   var self = this;
 
   //this.led = [new Pin(4), new Pin(18), new Pin(16), new Pin(6)];
 
-  if (Tessel_S.instance) {
-    return Tessel_S.instance;
+  if (PTP_Tessel.instance) {
+    return PTP_Tessel.instance;
   } else {
-    Tessel_S.instance = this;
+    PTP_Tessel.instance = this;
   }
 
   this.ports =  {
@@ -73,11 +73,11 @@ function Tessel_S () {
   };
 }
 
-var board = module.exports = new Tessel_S();
+var board = module.exports = new PTP_Tessel();
 
 for (var key in board.ports) {
     board.port[key] = board.ports[key];
 }
 
 
-util.inherits(Tessel_S, EventEmitter);
+util.inherits(PTP_Tessel, EventEmitter);

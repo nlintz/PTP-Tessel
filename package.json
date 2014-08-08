@@ -1,5 +1,5 @@
 {
-  "name": "tessel_s",
+  "name": "ptp-tessel",
   "version": "0.0.0",
   "description": " Emulator for Tessel",
   "main": "src/index.js",
