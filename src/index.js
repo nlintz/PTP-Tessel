@@ -1,5 +1,6 @@
 var EventEmitter = require('events').EventEmitter,
     util = require('util'),
+    fs = require('fs'),
     uartService = require('./drivers/uart.js'),
     i2cService = require('./drivers/i2c.js'),
     spiService = require('./drivers/spi.js'),
@@ -79,7 +80,7 @@ function PTP_Tessel() {
     PTP_Tessel.instance = this;
   }
 
-  var board = (getHardwareRevision().hardware == 'BCM2708') 'raspberryPi' ? 'cubieboard'; 
+  var board = (getHardwareRevision().hardware == 'BCM2708') ? 'raspberryPi' : 'cubieboard'; 
   this.ports =  BOARD_PORTS[board];
 
   this.port = function (label) {
