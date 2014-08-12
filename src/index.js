@@ -16,10 +16,9 @@ function getHardwareRevision () {
   })[0].split(":")[1].trim();
 
   var platforms = {
-    'raspberryPi':'BCM2708',
-    'cubieboard':'ARMv7 Processor rev 4 (v7l)'
+    'BCM2708':'raspberryPi',
+    'ARMv7 Processor rev 4 (v7l)':'cubieBoard'
   }
-
   return {rev:rev, hardware:hardware, platform:platforms[hardware]};
 }
 
@@ -86,8 +85,8 @@ function PTP_Tessel() {
   }
 
   var board = getHardwareRevision().platform;
-  this.ports =  BOARD_PORTS[board];
 
+  this.ports =  BOARD_PORTS[board];
   this.port = function (label) {
     return board.ports[label.toUpperCase()];
   };
