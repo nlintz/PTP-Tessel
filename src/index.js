@@ -15,7 +15,11 @@ function getHardwareRevision () {
     return line.indexOf("Hardware") == 0;
   })[0].split(":")[1].trim();
 
-  return {rev:rev, hardware:hardware};
+  var platforms = {
+    'BCM2708':'raspberryPi',
+    'ARMv7 Processor rev 4 (v7l)':'cubieBoard'
+  }
+  return {rev:rev, hardware:hardware, platform:platforms[hardware]};
 }
 
 var BOARD_PORTS = {
@@ -80,9 +84,9 @@ function PTP_Tessel() {
     PTP_Tessel.instance = this;
   }
 
-  var board = (getHardwareRevision().hardware == 'BCM2708') ? 'raspberryPi' : 'cubieboard'; 
-  this.ports =  BOARD_PORTS[board];
+  var board = getHardwareRevision().platform;
 
+  this.ports =  BOARD_PORTS[board];
   this.port = function (label) {
     return board.ports[label.toUpperCase()];
   };

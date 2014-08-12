@@ -5,6 +5,8 @@ var util = require('util'),
 
 var queue = new Queue();
 var SPIDriver = require('pi-spi');
+var SPIOptions = require('spi');
+
 var MAX_SPI_SPEED = {freq:125 * Math.pow(10, 6), divisor:65536 };
 var MIN_SPI_SPEED = {freq:3.814 * Math.pow(10, 3), divisor:2};
 
@@ -21,21 +23,16 @@ function SpiService (device) {
 }
 
 function SPI (device, params) {
-  this.spi = SPIDriver.initialize(device);
-
+  // TODO Include params for datamode, framemode and add setters
   params = params || {};
   if (typeof params.mode == 'number') {
     params.cpol = params.mode & 0x1;
     params.cpha = params.mode & 0x2;
     //this.spi.dataMode(params.cpol | params.cpha);
-    this.spi.dataMode(0)
+    // this.spi.dataMode(0)
   }
-  this.cpol = params.cpol == 'high' || params.cpol == 1 ? 1 : 0;
-  this.cpha = params.cpha == 'second' || params.cpha == 1 ? 1 : 0;
 
   this.clockSpeed = params.clockSpeed || 100000;
-  //this.spi.clockSpeed(this.clockSpeed);
-  this.spi.clockSpeed(8000);
 
   this.frameMode = 'normal';
   this.role = params.role == 'slave' ? 'slave': 'master';
@@ -44,6 +41,12 @@ function SPI (device, params) {
   if (this.chipSelect) {
     this.chipSelect.output().high()
   }
+
+  var spiSettings = new SPIOptions.Spi('/dev/spidev0.0');
+  spiSettings.maxSpeed(this.clockSpeed);
+  spiSettings.open(); spiSettings.close();
+
+  this.spi = SPIDriver.initialize(device);
 };
 
 util.inherits(SPI, EventEmitter);
