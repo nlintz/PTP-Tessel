@@ -33,7 +33,7 @@ function SPI (device, params) {
   }
 
   this.clockSpeed = params.clockSpeed || 100000;
-  if (this.clockSpeed < 5000) { // 5k is the lower bound for many mcu's
+  if (this.clockSpeed < 5000) { // 5kHz is the lower bound for many mcu's
     this.clockSpeed = 5000;
   }
 

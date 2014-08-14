@@ -15,16 +15,25 @@ function getHardwareRevision () {
     return line.indexOf("Hardware") == 0;
   })[0].split(":")[1].trim();
 
-  var platforms = {
-    'BCM2708':'raspberryPi',
-    'ARMv7 Processor rev 4 (v7l)':'cubieBoard'
-  }
-  return {rev:rev, hardware:hardware, platform:platforms[hardware]};
+  if (hardware == "BCM2708") {
+    if (rev < 0x10) {
+      platform = 'raspberryPiB';
+    } else {
+      platform = 'raspberryPiB_plus'
+    }
+  } else if (hardware == 'ARMv7 Processor rev 4 (v7l)') {
+    platform = 'cubieBoard';
+  };
+
+  return {rev:rev, hardware:hardware, platform:platform};
 }
 
 var BOARD_PORTS = {
-  'raspberryPi' : {
+  'raspberryPiB' : {
       A: new Port('A', [new Pin(17), new Pin(21), new Pin(22), new Pin(23)], [], [], i2cService("/dev/i2c-1"), uartService("/dev/ttyAMA0"))
+  },  
+  'raspberryPiB_plus' : {
+      A: new Port('A', [new Pin(17), new Pin(27), new Pin(22), new Pin(23)], [], [], i2cService("/dev/i2c-1"), uartService("/dev/ttyAMA0"))
   },
   'cubieboard' : {
       A: new Port('A', [new Pin(30), new Pin(28), new Pin(42), new Pin(11)], [], [], i2cService("/dev/i2c-1"), uartService("/dev/ttyS1")),
