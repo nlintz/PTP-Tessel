@@ -23,7 +23,7 @@ function SpiService (device) {
 }
 
 function SPI (device, params) {
-  // TODO Include params for datamode, framemode and add setters
+  // TODO Include params attributes for datamode, framemode and add setter methods
   params = params || {};
   if (typeof params.mode == 'number') {
     params.cpol = params.mode & 0x1;
@@ -33,7 +33,7 @@ function SPI (device, params) {
   }
 
   this.clockSpeed = params.clockSpeed || 100000;
-  if (this.clockSpeed < 5000) { // 5kHz is the lower bound for many mcu's
+  if (this.clockSpeed < 5000) { // Below 5kHz causes problems on Raspi
     this.clockSpeed = 5000;
   }
 
@@ -46,10 +46,11 @@ function SPI (device, params) {
   }
 
   var spiSettings = new SPIOptions.Spi('/dev/spidev0.0');
-  spiSettings.maxSpeed(this.clockSpeed);
+  spiSettings.maxSpeed(this.clockSpeed); // B sets clockspeed like this, we'll have to refactor this garbage
   spiSettings.open(); spiSettings.close();
 
   this.spi = SPIDriver.initialize(device);
+  this.spi.clockSpeed(this.clockSpeed); // B+ sets clockspeed like this
 };
 
 util.inherits(SPI, EventEmitter);
